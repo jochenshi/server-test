@@ -1,74 +1,37 @@
 var express = require('express');
 var router = express.Router();
-var mongoose = require('mongoose')
-mongoose.connect('mongodb://localhost:27017/')
-var mongoClient = require('mongodb').MongoClient
-var DB_CONNECT_STR = 'mongodb://localhost:27017/testdb'
+var mysql = require('mysql')
+var connection = mysql.createConnection({
+  host : 'localhost',
+  user : 'root',
+  password : 'unis123',
+  database : 'vue-end'
+})
+var actions = require('../common/actions')
 
-// mongoClient.connect(DB_CONNECT_STR, function (err, db) {
-//   if (err) {
-//     console.log('连接失败', err)
-//   } else {
-//     console.log('连接成功')
-//   }
-// })
-
-var db = mongoose.connection
-
-var establishConnect = function (fun, req, res) {
-  mongoClient.connect(DB_CONNECT_STR, function(err, db) {
-    if (err) {
-      console.log('连接失败', err)
-    } else {
-      console.log('连接成功')
-      fun.call(null, db, req, res)
-    }
-  })
-}
-
-var getData = function (db, req, res) {
-  var collection = db.collection('aaa')
-  collection.find().toArray(function (err, result) {
-    if (err) {
-      console.log('Error:' + err)
-      return
-    } else {
-      console.log('aa', result)
-      res.send(result)
-    }
-  })
-}
-
+connection.connect()
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  mongoClient.connect(DB_CONNECT_STR, function(err, db) {
-    var collects = db.collection('aaa')
-    collects.find().toArray(function (err, result) {
-      if (err) {
-        console.log('error',err)
-      } else {
-        //console.log(result)
-      }
-    })
-  })
   res.render('index', { title: 'Express' });
 });
+
+// get user info
 router.get('/v1/user',function(req, res){
-  establishConnect(getData, req, res)
-  // mongoClient.connect(DB_CONNECT_STR, function(err, db) {
-  //   var collects = db.collection('aaa')
-  //   collects.find().toArray(function (err, result) {
-  //     if (err) {
-  //       console.log('error',err)
-  //     } else {
-  //       console.log(result)
-  //       res.send(result)
-  //     }
-  //   })
-  // })
-  //console.log(req)
+  connection.query('SELECT * from `user_table`', function (error, results, fields) {
+    if (error) {
+      throw error
+    } else {
+      res.send(results)
+    }
+  })
   //res.send({'message':'Hello user', 'user_id':'1', 'username':'testuser1'})
 });
+
+router.post('/v1/user', function(req, res) {
+  actions.validateUser(req.body)
+  //console.log(req.body)
+  res.send(req.body)
+})
 
 router.get('/v1/users/:userId/book/:bookId', function(req, res){
   console.log(req.params)
