@@ -10,6 +10,7 @@ var connection = mysql.createConnection({
 var actions = require('../common/actions')
 
 connection.connect()
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
@@ -21,11 +22,22 @@ router.get('/v1/user',function(req, res){
     if (error) {
       throw error
     } else {
-      res.send(results)
+      res.send({result: true, data: results})
     }
   })
   //res.send({'message':'Hello user', 'user_id':'1', 'username':'testuser1'})
 });
+
+router.get('/v1/activity', function (req, res) {
+  connection.query('SELECT * from `activity_table`', function (error, results, fields) {
+    if (error) {
+      throw error
+    } else {
+      res.send({result: true, data: results})
+    }
+  })
+})
+
 
 router.post('/v1/user', function(req, res) {
   actions.validateUser(req.body)
