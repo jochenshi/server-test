@@ -57,6 +57,19 @@ router.get('/v1/products', function (req, res) {
 
 })
 
+router.get('/v1/personalInfo', function (req, res) {
+  res.send({'id': '1', 'nickname': 'tom', 'sex': 'male', 'birth': 'Mon Jul 03 2017 13:40:26 GMT+0800 (中国标准时间)', 'height': 180, 'phone': 12222222222, 'mail': 'asd@qq.com', 'description': 'sadasdsadsadasdsadsad'})
+})
+
+router.post('/v1/personalInfo', function (req, res) {
+  console.log(req.body)
+  res.send({result: 'ok'})
+})
+
+router.post('/v1/sign', function (req, res) {
+  res.status(404).send(new Error())
+})
+
 
 module.exports = router;
 
