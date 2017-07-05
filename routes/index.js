@@ -70,6 +70,12 @@ router.post('/v1/sign', function (req, res) {
   res.status(404).send(new Error())
 })
 
+router.post('/v1/confirmApply', function (req, res) {
+  console.log(req.body)
+  res.send({success: true, mess: '申请成功'})
+  //res.status(404).send({success: false, mess: '申请失败'})
+})
+
 
 module.exports = router;
 
