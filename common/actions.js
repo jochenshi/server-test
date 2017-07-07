@@ -1,3 +1,6 @@
+var srypto = require('crypto')
+var secret_key = 'vue-end-encrypt'
+var encrypt_key = 'aes-256-cbc'
 var actions = {
     validateUser : function (data) {
         console.log(data)
@@ -17,6 +20,20 @@ var actions = {
             mess: mess,
             data: data
         }
+    },
+
+    //加密数据
+    encryptData: function (data) {
+        var cipher = srypto.createCipher(encrypt_key, secret_key)
+        var encrypted = cipher.update(data, 'utf8', 'hex')
+        return encrypted + cipher.final('hex')
+    },
+
+    // 解密数据
+    decrypted: function (data) {
+        var decipher = srypto.createDecipher(encrypt_key, secret_key)
+        var decrypts = decipher.update(data, 'hex', 'utf8')
+        return decrypts + decipher.final('utf8')
     }
 }
 

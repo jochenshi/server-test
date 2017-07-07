@@ -14,7 +14,32 @@ connection.connect()
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
+  console.log(req.cookies)
+  console.log(req.signedCookies)
 });
+
+
+//过滤所有请求的方法，用于进行相关的验证
+router.use(function (req, res, next) {
+  console.log('go in filter method')
+  var getAuth = req.cookies.authInfo
+  if (!getAuth) {
+    res.status(404).send({mess:'您尚未登录，请先登录', code: 404})
+  } else {
+    var decrypt = actions.decrypted(getAuth).userId
+    if (!decrypt) {
+      result({mess:'登录信息无效，请重新登录', code: 404})
+      res.status(404).send(result)
+    } else {
+      connection.query('SELECT * from `userSecret` WHERE userId =' + decrypt, function (error, results, fields) {
+        console.log(results)
+      })
+      next()
+    }
+  }
+  console.log(getAuth, '=================')
+})
+
 
 // get user info
 router.get('/v1/user',function(req, res){
@@ -58,10 +83,14 @@ router.get('/v1/products', function (req, res) {
 })
 
 router.get('/v1/personalInfo', function (req, res) {
+
+  console.log(req.cookies)
+  console.log(req.signedCookies)
   res.send({'id': '1', 'nickname': 'tom', 'sex': 'male', 'birth': 'Mon Jul 03 2017 13:40:26 GMT+0800 (中国标准时间)', 'height': 180, 'phone': 12222222222, 'mail': 'asd@qq.com', 'description': 'sadasdsadsadasdsadsad'})
 })
 
 router.post('/v1/personalInfo', function (req, res) {
+  res.cookie('servertest', 'testcookievalue', {expires: new Date(Date.now() + 10000)})
   console.log(req.body)
   res.send({result: 'ok'})
 })
