@@ -21,28 +21,36 @@ router.get('/', function(req, res, next) {
 
 //过滤所有请求的方法，用于进行相关的验证
 router.use(function (req, res, next) {
-  console.log('go in filter method')
+  console.log('go in filter method', req.path)
   var getAuth = req.cookies.authInfo
-  if (!getAuth) {
+  if (req.path !== '/v1/login') {
+    if (!getAuth) {
     res.status(404).send({mess:'您尚未登录，请先登录', code: 404})
-  } else {
-    var decrypt = actions.decrypted(getAuth).userId
-    if (!decrypt) {
-      result({mess:'登录信息无效，请重新登录', code: 404})
-      res.status(404).send(result)
     } else {
-      connection.query('SELECT * from `userSecret` WHERE userId =' + decrypt, function (error, results, fields) {
-        console.log(results)
-      })
-      next()
+      var decrypt = actions.decrypted(getAuth).userId
+      if (!decrypt) {
+        result({mess:'登录信息无效，请重新登录', code: 404})
+        res.status(404).send(result)
+      } else {
+        connection.query('SELECT * from `userSecret` WHERE userId =' + decrypt, function (error, results, fields) {
+          console.log(results)
+        })
+        next()
+      }
     }
+  } else {
+    next()
   }
+  
+  // res.cookie('authInfo', actions.encryptData('testcookievalue'), {expires: new Date(Date.now() + 15000) , httpOnly: true})
+  // next()
   console.log(getAuth, '=================')
 })
 
 
 // get user info
 router.get('/v1/user',function(req, res){
+  console.log(req.session)
   connection.query('SELECT * from `user_table`', function (error, results, fields) {
     if (error) {
       throw error
@@ -90,7 +98,7 @@ router.get('/v1/personalInfo', function (req, res) {
 })
 
 router.post('/v1/personalInfo', function (req, res) {
-  res.cookie('servertest', 'testcookievalue', {expires: new Date(Date.now() + 10000)})
+  //res.cookie('servertest', actions.encryptData('testcookievalue'), {expires: new Date(Date.now() + 15000) , httpOnly: true})
   console.log(req.body)
   res.send({result: 'ok'})
 })
