@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var mysql = require('mysql')
+var srypto = require('crypto')
 var connection = mysql.createConnection({
   host : 'localhost',
   user : 'root',
@@ -11,6 +12,8 @@ var actions = require('../common/actions')
 
 connection.connect()
 
+// var a = actions.generateToken('admin','userId1')
+
 /* GET home page. */
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
@@ -20,45 +23,58 @@ router.get('/', function(req, res, next) {
 
 
 //过滤所有请求的方法，用于进行相关的验证
-router.use(function (req, res, next) {
-  console.log('go in filter method', req.path)
-  var getAuth = req.cookies.authInfo
-  if (req.path !== '/v1/login') {
-    if (!getAuth) {
-    res.status(404).send({mess:'您尚未登录，请先登录', code: 404})
-    } else {
-      var decrypt = actions.decrypted(getAuth).userId
-      if (!decrypt) {
-        result({mess:'登录信息无效，请重新登录', code: 404})
-        res.status(404).send(result)
-      } else {
-        connection.query('SELECT * from `userSecret` WHERE userId =' + decrypt, function (error, results, fields) {
-          console.log(results)
-        })
-        next()
-      }
-    }
-  } else {
-    next()
-  }
+// router.use(function (req, res, next) {
+//   console.log('go in filter method', req.path)
+//   var getAuth = req.cookies.authInfo
+//   if (req.path !== '/v1/login') {
+//     if (!getAuth) {
+//     res.status(404).send({mess:'您尚未登录，请先登录', code: 404})
+//     } else {
+//       var decrypt = actions.decrypted(getAuth).userId
+//       if (!decrypt) {
+//         result({mess:'登录信息无效，请重新登录', code: 404})
+//         res.status(404).send(result)
+//       } else {
+//         // connection.query('SELECT * from `userSecret` WHERE userId =' + decrypt, function (error, results, fields) {
+//         //   console.log(results)
+//         // })
+//         next()
+//       }
+//     }
+//   } else {
+//     next()
+//   }
   
-  // res.cookie('authInfo', actions.encryptData('testcookievalue'), {expires: new Date(Date.now() + 15000) , httpOnly: true})
-  // next()
-  console.log(getAuth, '=================')
+//   // res.cookie('authInfo', actions.encryptData('testcookievalue'), {expires: new Date(Date.now() + 15000) , httpOnly: true})
+//   // next()
+//   console.log(getAuth, '=================')
+// })
+
+router.post('/v1/login', function (req, res) {
+  console.log(req.body)
+  var username = req.body.account
+  if (!username) {
+    res.status(404).send({data:[], mess: '用户名不存在'})
+  } else {
+    var id = Buffer.from(Date.now() + username).toString('hex')
+    var temp = actions.generateToken(username, id)
+    res.cookie('authInfo', temp, {expires: new Date(Date.now() + 30 * 60 * 1000) , httpOnly: true}).send({data:[{authInfo: temp}], mess: '登录成功', success: true})
+  }
 })
 
 
 // get user info
 router.get('/v1/user',function(req, res){
   console.log(req.session)
-  connection.query('SELECT * from `user_table`', function (error, results, fields) {
-    if (error) {
-      throw error
-    } else {
-      res.send({result: true, data: results})
-    }
-  })
-  //res.send({'message':'Hello user', 'user_id':'1', 'username':'testuser1'})
+  // connection.query('SELECT * from `user_table`', function (error, results, fields) {
+  //   if (error) {
+  //     throw error
+  //   } else {
+  //     res.send({result: true, data: results})
+  //   }
+  // })
+  console.log(actions.decodeToken(req.cookie.authInfo))
+  res.send({'message':'Hello user', 'user_id':'1', 'username':'testuser1'})
 });
 
 router.get('/v1/activity', function (req, res) {

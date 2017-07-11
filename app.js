@@ -21,15 +21,15 @@ app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(expressSession({
-  secret: 'vue client info',
-  cookie: {'name': 'tom', httpOnly: true, maxAge: 60000}
-}))
+// app.use(expressSession({
+//   secret: 'vue client info',
+//   cookie: {'name': 'tom', httpOnly: true, maxAge: 60000}
+// }))
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(function(req, res, next) {
-  console.log('sesion:', req.session)
-})
+// app.use(function(req, res, next) {
+//   console.log('sesion:', req.session)
+// })
 
 app.use('/', routes);
 app.use('/users', users);
