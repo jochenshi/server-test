@@ -1,5 +1,5 @@
 var srypto = require('crypto')
-var base64url = require('base64url')
+//var base64url = require('base64url')
 var secret_key = 'vue-end-encrypt'
 var encrypt_key = 'aes-256-cbc'
 var actions = {
