@@ -15,11 +15,12 @@ var actions = {
         return finalTime
     },
     // 统一数据返回的格式
-    formatResponse: function (code, mess, data) {
+    formatResponse: function (code, mess, data, result) {
         return {
             code: code,
             mess: mess,
-            data: data
+            data: data,
+            success: result
         }
     },
 

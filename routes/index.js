@@ -50,16 +50,35 @@ router.get('/', function(req, res, next) {
 //   console.log(getAuth, '=================')
 // })
 
+
+// 处理登录请求的方法
 router.post('/v1/login', function (req, res) {
   console.log(req.body)
-  var username = req.body.account
-  if (!username) {
-    res.status(404).send({data:[], mess: '用户名不存在'})
-  } else {
-    var id = Buffer.from(Date.now() + username).toString('hex')
-    var temp = actions.generateToken(username, id)
-    res.cookie('authInfo', temp, {expires: new Date(Date.now() + 30 * 60 * 1000) , httpOnly: true}).send({data:[{authInfo: temp}], mess: '登录成功', success: true})
-  }
+  var data = req.body
+  connection.query({
+    sql: 'SELECT * FROM `users` WHERE `account` = ?',
+    values: [data.account]
+  }, function (error, results, fields) {
+    if (error) throw error
+    if (results.length) {
+      if (results[0].password === data.password) {
+        var id = Buffer.from(Date.now() + data.account).toString('hex')
+        var temp = actions.generateToken(data.account, id)
+        res.cookie('authInfo', temp, {expires: new Date(Date.now() + 30 * 60 * 1000) , httpOnly: true}).send(actions.formatResponse(200, '登陆成功', [temp], true))
+      } else {
+        res.status(400).send(actions.formatResponse(400, '密码不正确', [], false))
+      }
+    } else {
+      res.send(actions.formatResponse(400, '该用户不存在', [], false))
+    }
+  })
+  // if (!username) {
+  //   res.status(404).send({data:[], mess: '用户名不存在'})
+  // } else {
+  //   var id = Buffer.from(Date.now() + username).toString('hex')
+  //   var temp = actions.generateToken(username, id)
+  //   res.cookie('authInfo', temp, {expires: new Date(Date.now() + 30 * 60 * 1000) , httpOnly: true}).send({data:[{authInfo: temp}], mess: '登录成功', success: true})
+  // }
 })
 
 
@@ -92,6 +111,36 @@ router.post('/v1/user', function(req, res) {
   actions.validateUser(req.body)
   //console.log(req.body)
   res.send(req.body)
+})
+
+// 处理注册用户的请求
+router.post('/v1/register', function (req, res) {
+  var data = req.body
+  console.log(data)
+  connection.query({
+    sql: 'SELECT * FROM `users` WHERE `account` = ?',
+    values: [data.account]
+  }, function (error, results, fields) {
+    if (error) throw error
+    if (results.length) {
+      res.send(actions.formatResponse(400, '该昵称或账号已被占用', [], false))
+    } else {
+      var userId = 'user_' + Date.now()
+      connection.query({
+        sql: 'INSERT INTO `users` SET ?',
+        values: {account: data.account, password: data.password, userId: userId}
+      }, function (err, result, field) {
+        if (err) {
+          res.send(actions.formatResponse(400, '注册失败', err, false))
+        } else {
+          res.send(actions.formatResponse(200, '注册成功', result, true))
+        }
+        
+      })
+    }
+    //res.send(actions.formatResponse(200, '注册成功', results, true))
+  })
+  //res.send(actions.formatResponse(200, '注册成功', [], true))
 })
 
 router.get('/v1/users/:userId/book/:bookId', function(req, res){
