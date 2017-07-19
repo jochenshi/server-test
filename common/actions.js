@@ -66,11 +66,20 @@ var actions = {
         return encodeS + '.' + actions.encodeData(encodeS)
     },
 
+    // 解密JWT格式的token
     decodeToken: function (val) {
         var arr = val.split('.')[2]
         var decode1 = actions.decodeData(arr).split('.')[1]
         var decode2 = actions.decodeData(decode1)
         return {userId: actions.decrypted(decode2.userId), account: actions.decrypted(decode2.account)}
+    },
+
+    excuteInser: function (connect, sql, data) {
+        connect.query()
+    },
+
+    funcModel: function (req, res, next, flag) {
+        return function (req, res, next) {}
     }
 }
 

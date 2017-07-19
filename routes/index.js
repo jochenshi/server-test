@@ -2,17 +2,21 @@ var express = require('express');
 var router = express.Router();
 var mysql = require('mysql')
 var srypto = require('crypto')
-var connection = mysql.createConnection({
-  host : 'localhost',
-  user : 'root',
-  password : 'unis123',
-  database : 'vue-end'
-})
-var actions = require('../common/actions')
+// var connection = mysql.createConnection({
+//   host : 'localhost',
+//   user : 'root',
+//   password : 'unis123',
+//   database : 'vue-end'
+// })
+// var actions = require('../common/actions')
 
-connection.connect()
+// connection.connect()
 
 // var a = actions.generateToken('admin','userId1')
+var sqlHandle = require('../common/sqlHandle')
+
+
+
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
@@ -53,32 +57,31 @@ router.get('/', function(req, res, next) {
 
 // 处理登录请求的方法
 router.post('/v1/login', function (req, res) {
-  console.log(req.body)
-  var data = req.body
-  connection.query({
-    sql: 'SELECT * FROM `users` WHERE `account` = ?',
-    values: [data.account]
-  }, function (error, results, fields) {
-    if (error) throw error
-    if (results.length) {
-      if (results[0].password === data.password) {
-        var id = Buffer.from(Date.now() + data.account).toString('hex')
-        var temp = actions.generateToken(data.account, id)
-        res.cookie('authInfo', temp, {expires: new Date(Date.now() + 30 * 60 * 1000) , httpOnly: true}).send(actions.formatResponse(200, '登陆成功', [temp], true))
-      } else {
-        res.status(400).send(actions.formatResponse(400, '密码不正确', [], false))
-      }
-    } else {
-      res.send(actions.formatResponse(400, '该用户不存在', [], false))
-    }
-  })
-  // if (!username) {
-  //   res.status(404).send({data:[], mess: '用户名不存在'})
-  // } else {
-  //   var id = Buffer.from(Date.now() + username).toString('hex')
-  //   var temp = actions.generateToken(username, id)
-  //   res.cookie('authInfo', temp, {expires: new Date(Date.now() + 30 * 60 * 1000) , httpOnly: true}).send({data:[{authInfo: temp}], mess: '登录成功', success: true})
-  // }
+  // console.log(req.body)
+  // var data = req.body
+  // connection.query({
+  //   sql: 'SELECT * FROM `users` WHERE `account` = ?',
+  //   values: [data.account]
+  // }, function (error, results, fields) {
+  //   if (error) throw error
+  //   if (results.length) {
+  //     if (results[0].password === data.password) {
+  //       var id = Buffer.from(Date.now() + data.account).toString('hex')
+  //       // 生成的cookie进行返回，该信息进行过加密
+  //       var temp = actions.generateToken(data.account, id)
+  //       res.cookie(
+  //         'authInfo', 
+  //         temp, 
+  //         {expires: new Date(Date.now() + 30 * 60 * 1000), httpOnly: true}
+  //         ).send(actions.formatResponse(200, '登陆成功', [temp], true))
+  //     } else {
+  //       res.status(400).send(actions.formatResponse(400, '密码不正确', [], false))
+  //     }
+  //   } else {
+  //     res.send(actions.formatResponse(400, '该用户不存在', [], false))
+  //   }
+  // })
+  sqlHandle.login(req, res, next)
 })
 
 
@@ -114,33 +117,8 @@ router.post('/v1/user', function(req, res) {
 })
 
 // 处理注册用户的请求
-router.post('/v1/register', function (req, res) {
-  var data = req.body
-  console.log(data)
-  connection.query({
-    sql: 'SELECT * FROM `users` WHERE `account` = ?',
-    values: [data.account]
-  }, function (error, results, fields) {
-    if (error) throw error
-    if (results.length) {
-      res.send(actions.formatResponse(400, '该昵称或账号已被占用', [], false))
-    } else {
-      var userId = 'user_' + Date.now()
-      connection.query({
-        sql: 'INSERT INTO `users` SET ?',
-        values: {account: data.account, password: data.password, userId: userId}
-      }, function (err, result, field) {
-        if (err) {
-          res.send(actions.formatResponse(400, '注册失败', err, false))
-        } else {
-          res.send(actions.formatResponse(200, '注册成功', result, true))
-        }
-        
-      })
-    }
-    //res.send(actions.formatResponse(200, '注册成功', results, true))
-  })
-  //res.send(actions.formatResponse(200, '注册成功', [], true))
+router.post('/v1/register', function (req, res, next) {
+  sqlHandle.register(req, res, next)
 })
 
 router.get('/v1/users/:userId/book/:bookId', function(req, res){
@@ -156,10 +134,24 @@ router.get('/v1/products', function (req, res) {
 })
 
 router.get('/v1/personalInfo', function (req, res) {
-
   console.log(req.cookies)
   console.log(req.signedCookies)
-  res.send({'id': '1', 'nickname': 'tom', 'sex': 'male', 'birth': 'Mon Jul 03 2017 13:40:26 GMT+0800 (中国标准时间)', 'height': 180, 'phone': 12222222222, 'mail': 'asd@qq.com', 'description': 'sadasdsadsadasdsadsad'})
+  res.status(400).send({
+    data:
+      {
+        'id': '1',
+        'nickname': 'tom',
+        'sex': 'male', 
+        'birth': 'Mon Jul 03 2017 13:40:26 GMT+0800 (中国标准时间)', 
+        'height': 180, 
+        'phone': 12222222222, 
+        'mail': 'asd@qq.com', 
+        'description': 'sadasdsadsadasdsadsad'
+      },
+    mess: '请求成功',
+    code: ''
+    })
+  //res.send({'id': '1', 'nickname': 'tom', 'sex': 'male', 'birth': 'Mon Jul 03 2017 13:40:26 GMT+0800 (中国标准时间)', 'height': 180, 'phone': 12222222222, 'mail': 'asd@qq.com', 'description': 'sadasdsadsadasdsadsad'})
 })
 
 router.post('/v1/personalInfo', function (req, res) {
