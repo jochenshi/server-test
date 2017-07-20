@@ -19,12 +19,16 @@ var sqlHandle = require('../common/sqlHandle')
 
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-  console.log(req.cookies)
-  console.log(req.signedCookies)
-});
+// router.get('/', function(req, res, next) {
+//   res.render('index', { title: 'Express' });
+//   console.log(req.cookies)
+//   console.log(req.signedCookies)
+// });
 
+//过滤所有请求的方法，用于进行相关的验证
+router.use(function (req, res, next) {
+  sqlHandle.handleAll(req, res, next)
+})
 
 //过滤所有请求的方法，用于进行相关的验证
 // router.use(function (req, res, next) {
@@ -56,7 +60,7 @@ router.get('/', function(req, res, next) {
 
 
 // 处理登录请求的方法
-router.post('/v1/login', function (req, res) {
+router.post('/v1/login', function (req, res, next) {
   // console.log(req.body)
   // var data = req.body
   // connection.query({

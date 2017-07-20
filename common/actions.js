@@ -50,8 +50,8 @@ var actions = {
     },
 
     //生成JWT格式的token
-    generateToken: function (account, userId) {
-        var sigTime = Date.now()
+    generateToken: function (account, userId, sigTime) {
+        sigTime = sigTime || Date.now()
         var secret = 'sjcservertest'
         var header = {'typ': 'JWT', 'alg': 'HS256'}
         var payload = {
@@ -68,10 +68,15 @@ var actions = {
 
     // 解密JWT格式的token
     decodeToken: function (val) {
-        var arr = val.split('.')[2]
-        var decode1 = actions.decodeData(arr).split('.')[1]
-        var decode2 = actions.decodeData(decode1)
-        return {userId: actions.decrypted(decode2.userId), account: actions.decrypted(decode2.account)}
+        try {
+            var arr = val.split('.')[2]
+            var decode1 = actions.decodeData(arr).split('.')[1]
+            var decode2 = actions.decodeData(decode1)
+            var userId = Buffer.from(actions.decrypted(decode2.userId), 'base64').toString()
+            return {userId: userId, account: actions.decrypted(decode2.account)}
+        } catch (e) {
+            return false
+        }
     },
 
     excuteInser: function (connect, sql, data) {
