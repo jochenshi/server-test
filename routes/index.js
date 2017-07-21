@@ -61,30 +61,6 @@ router.use(function (req, res, next) {
 
 // 处理登录请求的方法
 router.post('/v1/login', function (req, res, next) {
-  // console.log(req.body)
-  // var data = req.body
-  // connection.query({
-  //   sql: 'SELECT * FROM `users` WHERE `account` = ?',
-  //   values: [data.account]
-  // }, function (error, results, fields) {
-  //   if (error) throw error
-  //   if (results.length) {
-  //     if (results[0].password === data.password) {
-  //       var id = Buffer.from(Date.now() + data.account).toString('hex')
-  //       // 生成的cookie进行返回，该信息进行过加密
-  //       var temp = actions.generateToken(data.account, id)
-  //       res.cookie(
-  //         'authInfo', 
-  //         temp, 
-  //         {expires: new Date(Date.now() + 30 * 60 * 1000), httpOnly: true}
-  //         ).send(actions.formatResponse(200, '登陆成功', [temp], true))
-  //     } else {
-  //       res.status(400).send(actions.formatResponse(400, '密码不正确', [], false))
-  //     }
-  //   } else {
-  //     res.send(actions.formatResponse(400, '该用户不存在', [], false))
-  //   }
-  // })
   sqlHandle.login(req, res, next)
 })
 
@@ -137,31 +113,16 @@ router.get('/v1/products', function (req, res) {
 
 })
 
-router.get('/v1/personalInfo', function (req, res) {
+// 获取用户信息的请求
+router.get('/v1/personalInfo', function (req, res, next) {
   console.log(req.cookies)
   console.log(req.signedCookies)
-  res.status(400).send({
-    data:
-      {
-        'id': '1',
-        'nickname': 'tom',
-        'sex': 'male', 
-        'birth': 'Mon Jul 03 2017 13:40:26 GMT+0800 (中国标准时间)', 
-        'height': 180, 
-        'phone': 12222222222, 
-        'mail': 'asd@qq.com', 
-        'description': 'sadasdsadsadasdsadsad'
-      },
-    mess: '请求成功',
-    code: ''
-    })
-  //res.send({'id': '1', 'nickname': 'tom', 'sex': 'male', 'birth': 'Mon Jul 03 2017 13:40:26 GMT+0800 (中国标准时间)', 'height': 180, 'phone': 12222222222, 'mail': 'asd@qq.com', 'description': 'sadasdsadsadasdsadsad'})
+  sqlHandle.getUserInfo(req, res, next)
 })
 
-router.post('/v1/personalInfo', function (req, res) {
-  //res.cookie('servertest', actions.encryptData('testcookievalue'), {expires: new Date(Date.now() + 15000) , httpOnly: true})
-  console.log(req.body)
-  res.send({result: 'ok'})
+// 更新用户信息的请求
+router.post('/v1/personalInfo', function (req, res, next) {
+  sqlHandle.updateUserInfo(req, res, next)
 })
 
 router.post('/v1/sign', function (req, res) {

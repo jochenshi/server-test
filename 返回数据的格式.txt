@@ -1,0 +1,72 @@
+数据的返回格式的定义
+{
+    data: [],
+    code: '200',
+    mess: '请求成功',
+    success: true,
+}
+
+1.获取所有的可申请的活动
+getActivity /v1/activity/
+{
+    data: [
+        {
+            id: '1',
+            title: '',
+            release_time: '',
+            start_time: '',
+            end_time: '',
+            sponsor: '',
+            certificate: true/false,
+            price: '',
+            price_unit: '',
+            jobs: ['singer','dancer']
+        }
+    ],
+    success: true
+}
+
+2.获取正在报名的活动
+getApplying /v1/applying/
+{
+    data: [
+        {
+            id: 1,
+            title: '',
+            release_time: '',
+            lasting_time: '',
+            activity_place: '',
+            jobs: [],
+            price: '',
+            price_unit: '',
+            step: 1,
+            certificate: true/false,
+            sponsor: ''
+        }
+    ],
+    mess: '请求成功',
+    code: '200'
+}
+
+3.获取正在出活的某个活动的详情
+getCertainActivity /v1/certaiAactivity
+{
+    data: 
+    {
+        tltle: '',
+        release_time: '',
+        lasting_time: '',
+        activity_place: '',
+        gather_place: '',
+        gather_time: '',
+        jobs: [],
+        price: '',
+        unit: '',
+        certificate: true/false,
+        sponsor: '',
+        contact: [{phone: ''}, {wechat: ''}]
+        description: ''
+    },
+    mess: '请求成功',
+    code: 200
+}

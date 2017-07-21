@@ -46,7 +46,13 @@ var excuteFun = {
             if (err) {
                 throw err
             } else {
-                res.send(actions.formatResponse(200, '注册成功', result, true))
+                connection.query($sql.inset_userInfo, { nickname: param.nickname, uId: userId}, function (errs, results) {
+                    if (errs) {
+                        throw errs
+                    } else {
+                        res.send(actions.formatResponse(200, '注册成功', result, true))
+                    }
+                })
             }
         })
     },
@@ -81,17 +87,6 @@ var excuteFun = {
                             res.status(400).send(actions.formatResponse(400, '密码不正确', result, false))
                         }
                     })
-                    //res.status(400).send(actions.formatResponse(400, '该账号不存在', result, false))
-                    // var id = Buffer.from(Date.now() + param.account).toString('hex')
-                    // var temp = actions.generateToken(param.account, id)
-                    // // 登录验证成功，将生成的cookie进行返回，该信息进行过加密
-                    // // 同时将生成的token存储进入数据库，并记录执行登录请求的时间
-                    // //excuteFun.recordToken()
-                    // res.cookie(
-                    //     'authInfo',
-                    //     temp,
-                    //     {expires: new Date(Date.now() + 30 * 60 * 1000), httpOnly: true}
-                    // ).send(actions.formatResponse(200, '登录成功', [temp], true)) 
                 }
             })
         })
@@ -129,6 +124,7 @@ var excuteFun = {
             console.log('this path is in authroutes')
             var cookie = req.cookies
             if (!cookie.authInfo || !cookie.userId) {
+                // 未携带cookie信息
                 res.status(400).send(actions.formatResponse(400, '当前尚未登陆或者登录失效，请登陆', [], false))
             } else {
                 var authInfo = cookie.authInfo, userId = cookie.userId
@@ -142,12 +138,9 @@ var excuteFun = {
                 } else {
                     res.status(400).send(actions.formatResponse(400, '登录信息已经失效，请重新登陆'))
                 }
-                // console.log(final)
-                // res.send(actions.formatResponse(200, '获取信息成功', final, true))
             }
-            // var userId = Buffer.from()
         } else {
-            // 此处是不需要进行权限验证的部分，直接请求即可
+            // 此处是不需要进行权限验证的部分，直接执行请求即可
             next()
         }
     },
@@ -162,7 +155,8 @@ var excuteFun = {
                 // 判断token的间隔是否已经超过了30分钟
                 var seperate = Math.abs(tmp - result[0].last_update) > 1800000
                 // 因为存储在数据库是atob的格式，此处需要对base64进行解码，暂时的处理方式，等待对数据库的结构进行调整
-                var tempAuth = Buffer.from(result[0].token, 'base64').toString()
+                //var tempAuth = Buffer.from(result[0].token, 'base64').toString()
+                var tempAuth = result[0].token
                 var tokenFlag = token === tempAuth
                 if (seperate || !tokenFlag) {
                     res.status(400).send(actions.formatResponse(400, '登录信息无效，请重新登陆', result, false))
@@ -178,6 +172,45 @@ var excuteFun = {
             } else {
                 res.status(400).send(actions.formatResponse(400, '登录信息已经失效，请重新登陆', result, false))
             }
+        })
+    },
+    // 获取用户信息的方法
+    getUserInfo: function (req, res, next) {
+        var data = Buffer.from(req.cookies.userId, 'base64').toString()
+        pool.getConnection(function (err, connection) {
+            if (err) {
+                throw err
+            }
+            connection.query($sql.get_userInfo, [data], function (error, results) {
+                if (error) {
+                    throw error
+                }
+                if (!results.length) {
+                    res.status(400).send(actions.formatResponse(400, '初始化信息失败'), results, false)
+                } else {
+                    res.send(actions.formatResponse(200, '获取信息成功', results, true))
+                }
+            })
+        })
+    },
+    // 更新用户信息的方法
+    updateUserInfo: function (req, res, next) {
+        // 从cookie获取用户的ID
+        console.log(req.body)
+        var modify_time = new Date()
+        var subData = Object.assign({}, req.body)
+        subData.last_modify = modify_time
+        var data = Buffer.from(req.cookies.userId, 'base64').toString()
+        pool.getConnection(function (err, connection) {
+            if (err) {
+                throw err
+            }
+            connection.query($sql.update_userInfo, subData, function (error, results) {
+                if (error) {
+                    throw error
+                }
+                res.send(actions.formatResponse(200, '更新用户信息成功', results, true))
+            })
         })
     }
 }
